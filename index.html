@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#164e63" />
+    <title>Bloom — NEET Biology Companion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="auth-view" class="auth-shell">
+      <section class="auth-card">
+        <span class="eyebrow">NEET BIOLOGY COMPANION</span>
+        <h1>Small steps.<br /><em>Every day.</em></h1>
+        <p>A private study home for NCERT reading, focused practice, and revising every mistake.</p>
+        <form id="login-form">
+          <label for="student-name">What should we call you?</label>
+          <input id="student-name" required maxlength="32" placeholder="Your name" autocomplete="name" />
+          <button type="submit">Start studying <span>→</span></button>
+        </form>
+        <small>Everything is stored privately in this browser for now.</small>
+      </section>
+      <div class="auth-art" aria-hidden="true"><div class="orb orb-one"></div><div class="orb orb-two"></div><span>🌿</span></div>
+    </main>
+
+    <div id="app-view" class="app-shell hidden">
+      <aside class="sidebar">
+        <a class="brand" href="#dashboard" data-view="dashboard"><span>✦</span> bloom</a>
+        <nav>
+          <button class="nav-link active" data-view="dashboard">⌂ <span>Today</span></button>
+          <button class="nav-link" data-view="practice">◉ <span>Practice</span></button>
+          <button class="nav-link" data-view="revision">↻ <span>Revision</span></button>
+          <button class="nav-link" data-view="errors">✎ <span>Error notebook</span></button>
+          <button class="nav-link" data-view="syllabus">▦ <span>Syllabus</span></button>
+        </nav>
+        <div class="sidebar-bottom"><button id="reset-data" class="text-button">Reset this browser data</button></div>
+      </aside>
+
+      <section class="content">
+        <header class="topbar"><div><p id="today-date" class="muted"></p><h2 id="page-title">Good morning</h2></div><div class="avatar" id="avatar">B</div></header>
+
+        <section id="dashboard" class="view active">
+          <div class="hero-grid">
+            <article class="quote-card"><span class="eyebrow">TODAY'S REMINDER</span><blockquote id="daily-quote"></blockquote><p>Open your NCERT. Your future self will thank you.</p></article>
+            <article class="countdown-card"><span class="eyebrow">NEET TARGET</span><strong id="days-left">—</strong><span>days to go</span><label class="date-edit">Target date <input id="target-date" type="date" /></label></article>
+          </div>
+          <div class="metric-grid">
+            <article class="metric streak"><span>🔥</span><div><b id="streak-count">0 day streak</b><small id="streak-copy">Solve 50 questions today</small></div></article>
+            <article class="metric"><span>◉</span><div><b id="today-questions">0 / 50</b><small>questions today</small></div></article>
+            <article class="metric"><span>◷</span><div><b id="today-minutes">0 min</b><small>focused today</small></div></article>
+            <article class="metric"><span>✓</span><div><b id="coverage-number">0%</b><small>syllabus covered</small></div></article>
+          </div>
+
+          <div class="split-grid">
+            <article class="panel progress-panel"><div class="panel-heading"><div><span class="eyebrow">BIOLOGY COVERAGE</span><h3>Keep the big picture visible</h3></div><button class="text-button" data-view="syllabus">View syllabus →</button></div><div class="progress-bar"><i id="coverage-bar"></i></div><div class="progress-labels"><span id="coverage-label">0 of 38 chapters complete</span><span id="coverage-detail">0% complete</span></div><div id="class-progress" class="class-progress"></div></article>
+            <article class="panel daily-panel"><div class="panel-heading"><div><span class="eyebrow">TODAY'S GOAL</span><h3>50-question streak</h3></div><button class="small-button" data-view="practice">Log practice</button></div><div class="goal-ring"><div><b id="goal-percent">0%</b><small>done</small></div></div><p id="goal-message">Begin with one focused set.</p></article>
+          </div>
+
+          <div class="split-grid lower-grid">
+            <article class="panel"><div class="panel-heading"><div><span class="eyebrow">DUE TODAY</span><h3>Your revision queue</h3></div><button class="text-button" data-view="revision">See all →</button></div><div id="due-list" class="due-list"></div></article>
+            <article class="panel"><div class="panel-heading"><div><span class="eyebrow">QUICK ACTIONS</span><h3>Make today count</h3></div></div><div class="quick-actions"><button data-view="practice">◉ Start practice</button><button id="quick-reading">▣ Log NCERT reading</button><button data-view="errors">✎ Add an error</button><a href="https://sciencelesson.in/NEET-Mock-Test/" target="_blank" rel="noreferrer">↗ Open ScienceLesson</a></div></article>
+          </div>
+        </section>
+
+        <section id="practice" class="view">
+          <div class="section-intro"><span class="eyebrow">PRACTICE SESSION</span><h2>Start, focus, learn.</h2><p>Use ScienceLesson, MTG, or official PYQs for questions. Log the session here when you finish.</p></div>
+          <div class="practice-grid">
+            <article class="panel timer-panel"><div class="timer-mode"><button class="mode-button active" data-mode="Questions">Question practice</button><button class="mode-button" data-mode="Study">Study focus</button></div><div id="timer-display">00:00:00</div><p id="timer-status">Choose a chapter, then begin when ready.</p><div class="timer-actions"><button id="timer-start" class="primary-button">Start timer</button><button id="timer-pause" class="secondary-button" disabled>Pause</button><button id="timer-finish" class="secondary-button" disabled>Finish & log</button></div></article>
+            <form id="practice-form" class="panel practice-form">
+              <label>Source<select id="practice-source"><option>ScienceLesson</option><option>MTG Fingerprints</option><option>Official PYQ</option><option>Other</option></select></label>
+              <label>Chapter<select id="practice-chapter"></select></label>
+              <div class="two-fields"><label>Questions solved<input id="practice-total" type="number" min="0" value="50" required /></label><label>Correct<input id="practice-correct" type="number" min="0" value="0" required /></label></div>
+              <div class="two-fields"><label>Wrong<input id="practice-wrong" type="number" min="0" value="0" required /></label><label>Guessed<input id="practice-guessed" type="number" min="0" value="0" required /></label></div>
+              <div class="form-actions"><button type="button" id="open-source" class="secondary-button">Open source ↗</button><button type="submit" class="primary-button">Save session</button></div>
+              <small>Guessed questions can be added to the Error Notebook after saving.</small>
+            </form>
+          </div>
+          <article class="panel history-panel"><div class="panel-heading"><div><span class="eyebrow">RECENT SESSIONS</span><h3>Progress, not perfection</h3></div></div><div id="session-history"></div></article>
+        </section>
+
+        <section id="revision" class="view">
+          <div class="section-intro"><span class="eyebrow">SPACED REVISION</span><h2>Meet the chapter again at the right time.</h2><p>Every NCERT reading schedules a Day 7 and Day 30 review. Mark one done to keep moving.</p></div>
+          <div id="revision-list" class="revision-list"></div>
+        </section>
+
+        <section id="errors" class="view">
+          <div class="section-intro"><span class="eyebrow">ERROR NOTEBOOK</span><h2>Mistakes become marks later.</h2><p>Save only questions worth seeing again: wrong answers, guesses, or confusing NCERT facts.</p></div>
+          <div class="error-grid"><form id="error-form" class="panel error-form"><label>Chapter<select id="error-chapter"></select></label><label>Why did it go wrong?<select id="error-type"><option>NCERT fact</option><option>Concept gap</option><option>Confused options</option><option>Silly mistake</option><option>Time pressure</option></select></label><label>Correct answer / key fact<textarea id="error-answer" required maxlength="600" placeholder="Write the correct option and the reason."></textarea></label><label>Question image <input id="error-image" type="file" accept="image/*" /></label><label>Personal note <textarea id="error-note" maxlength="600" placeholder="What will help you avoid this next time?"></textarea></label><button class="primary-button" type="submit">Save to notebook</button><small>Keep book-question images private; do not publish or share them.</small></form><article class="panel error-retest"><span class="eyebrow">RE-TEST MODE</span><h3 id="error-count">0 questions waiting</h3><p>Revisit saved errors until they feel easy.</p><button id="retest-random" class="secondary-button">Show a random error</button><div id="retest-card" class="retest-card hidden"></div></article></div><div id="error-list" class="error-list"></div>
+        </section>
+
+        <section id="syllabus" class="view">
+          <div class="section-intro"><span class="eyebrow">SYLLABUS MAP</span><h2>One chapter at a time.</h2><p>Check a chapter when its essentials are complete. Reading counts and revision status stay visible.</p></div>
+          <div id="syllabus-list" class="syllabus-list"></div>
+        </section>
+      </section>
+    </div>
+    <div id="toast" class="toast hidden"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
