@@ -19,11 +19,10 @@ A local-first personal study companion for NEET Biology. It deliberately does **
 This is a dependency-free static site. Open `index.html` in a modern browser, or serve the folder locally:
 
 ```bash
-cd /home/guru/neet-bio-companion
+cd neet-biology-platform
 python3 -m http.server 8080
 ```
 
 Then open `http://localhost:8080`.
 
 All current data is stored in this browser's local storage. A future hosted version can replace local storage with authenticated database storage without changing the study workflow.
-# neet-biology-platform
