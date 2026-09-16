@@ -54,7 +54,7 @@
       </aside>
 
       <section class="content">
-        <header class="topbar"><div><p id="today-date" class="muted"></p><h2 id="page-title">Good morning</h2></div><div class="avatar" id="avatar" style="cursor:pointer;" title="Click to change name">B</div></header>
+        <header class="topbar"><div><p id="today-date" class="muted"></p><h2 id="page-title">Good morning</h2></div><div style="display:flex;align-items:center;gap:8px;"><button id="reminder-btn" class="small-button" style="font-size:16px;padding:8px 12px;" title="Set Study Reminder">⏰</button><div class="avatar" id="avatar" style="cursor:pointer;" title="Click to change name">B</div></div></header>
 
         <section id="dashboard" class="view active">
           <div class="hero-grid">
@@ -119,6 +119,25 @@
       </section>
     </div>
     <div id="toast" class="toast hidden"></div>
+    
+    <div id="reminder-modal" class="auth-shell hidden" style="position:fixed;top:0;left:0;width:100%;height:100vh;z-index:100;background:rgba(23, 50, 58, 0.95);grid-template-columns:1fr;place-items:center;">
+      <section class="auth-card" style="min-height:auto;padding:40px;border-radius:20px;text-align:center;box-shadow:var(--shadow);max-width:400px;width:90%;">
+        <span class="eyebrow" style="color:var(--leaf);">⏰ STREAK GUARD</span>
+        <h2 style="margin:10px 0;">Set Daily Reminders</h2>
+        <p style="margin-bottom:20px;color:var(--muted);">When should we guilt-trip you into studying?</p>
+        <select id="reminder-interval" class="small-button" style="width:100%;padding:12px;text-align:center;font-size:14px;background:var(--deep);color:white;border:none;border-radius:10px;">
+          <option value="180">Every 3 Hours</option>
+          <option value="240" selected>Every 4 Hours</option>
+          <option value="1440">Once a Day (Streak Guard)</option>
+        </select>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button id="reminder-save" class="primary-button" style="flex:1;">Save & Turn On</button>
+          <button id="reminder-cancel" class="secondary-button" style="flex:1;">Cancel</button>
+        </div>
+        <small id="reminder-status" style="display:block;margin-top:10px;color:var(--muted);"></small>
+      </section>
+    </div>
+
     <script src="app.js"></script>
   </body>
 </html>

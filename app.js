@@ -41,12 +41,21 @@ const praises = ["Bro ate the NCERT and left no crumbs 🍽️", "NTA is shaking
 const roasts = ["Even an amoeba has a better accuracy rate 🦠", "Tukka strategy failed successfully 📉", "Drop year loading... 💀", "Bro selected 'All of the above' and hoped for the best.", "Negative marking just scammed you. -1 for existing."];
 const streakQuotes = ["Bro finally touched the NCERT. History has been made. 📖", "3-Day Streak! NTA is shaking rn 🥶", "Bro is secretly aiming for AIIMS Delhi 🏥🔥", "Bro ate the syllabus and left no crumbs. Absolute Chad. 🗿"];
 const brokenStreakQuotes = ["Drop year loading... 💀", "Bro thinks the syllabus will complete itself. 🤡", "Your competition is studying right now. Just saying.", "Neend > NEET? Wake up!"];
+const memeNotifications = [
+  { title: "Drop year loading... 💀", body: "Bro, your NCERT is gathering dust. Come do 10 MCQs!" },
+  { title: "NTA is shaking rn 🥶", body: "Time to maintain that daily streak. Tap to study!" },
+  { title: "Neend > NEET? 🤡", body: "Wake up! Your competition is on question #45 right now." },
+  { title: "Bro is secretly aiming for AIIMS 🏥", body: "Don't let the streak die. 15 minutes of biology, right now." },
+  { title: "Tukka strategy won't save you 📉", body: "Time to open the Error Notebook and clear your mistakes." }
+];
+
+let reminderTimer = null;
 
 let state = load();
 let timerInterval;
 let currentMode = "Questions";
 
-function blankState() { return { name: "", targetDate: "2027-05-03", chapters: {}, readings: [], sessions: [], errors: [], timer: null, lastLogin: "" }; }
+function blankState() { return { name: "", targetDate: "2027-05-03", chapters: {}, readings: [], sessions: [], errors: [], timer: null, lastLogin: "", reminderTimestamp: 0, reminderIntervalMins: 0 }; }
 function load() { try { return { ...blankState(), ...JSON.parse(localStorage.getItem(STORAGE) || "{}") }; } catch { return blankState(); } }
 function save() { localStorage.setItem(STORAGE, JSON.stringify(state)); }
 function el(id) { return document.getElementById(id); }
