@@ -120,20 +120,52 @@ function init() {
     }
   });
 
-  // Auto-start timer on outgoing links
+  // Smart Auto-Timer & Tab Tracker for Links
   document.body.addEventListener("click", (e) => {
-    const link = e.target.closest('a[target="_blank"]');
-    if (link) {
+    const btn = e.target.closest('a[data-chapter]');
+    if (btn) {
+      e.preventDefault(); // Stop normal target=_blank so we can track the child window
+      
+      const chId = btn.dataset.chapter;
+      const src = btn.dataset.source;
+      
+      // Auto-set UI and Forms
       currentMode = "Study";
+      document.querySelectorAll(".mode-button").forEach((b) => b.classList.toggle("active", b.dataset.mode === "Study"));
+      if(el("timer-status")) el("timer-status").textContent = "Use this for NCERT reading or revision.";
+      
+      if(el("practice-chapter")) el("practice-chapter").value = chId;
+      if(el("practice-source")) el("practice-source").value = src;
+      
+      // Start Timer
       startTimer();
-      toast("Study timer auto-started! Focus.");
+      toast(`Started ${src}. Time auto-saves when you close the tab!`);
+      
+      // Open window & poll status
+      const childWin = window.open(btn.href, "_blank");
+      if (childWin) {
+        const checkClosed = setInterval(() => {
+          if (childWin.closed) {
+            clearInterval(checkClosed);
+            // Finish automatically if still running
+            if (state.timer && state.timer.running && state.timer.mode === "Study") {
+              finishTimer();  // This auto-saves it to the database
+              toast("Welcome back! Study session auto-logged.");
+            }
+          }
+        }, 1000);
+      } else {
+        // Popups blocked fallback
+        toast("Timer started! Turn off pop-up blockers for auto-save.");
+        window.location.href = btn.href;
+      }
     }
   });
 }
 
 
 function showApp() { el("auth-view").classList.add("hidden"); el("app-view").classList.remove("hidden"); el("avatar").textContent = state.name[0].toUpperCase(); renderAll(); }
-function showView(view) { document.querySelectorAll(".view").forEach((section) => section.classList.toggle("active", section.id === view)); document.querySelectorAll(".nav-link").forEach((button) => button.classList.toggle("active", button.dataset.view === view)); const titles = { dashboard: `Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, ${state.name}`, practice: "Practice session", revision: "Revision plan", errors: "Error notebook", syllabus: "Syllabus map", chapters: "Chapter Notes" }; el("page-title").textContent = titles[view]; if (view === "dashboard") renderDashboard(); if (view === "practice") renderPractice(); if (view === "revision") renderRevision(); if (view === "errors") renderErrors(); if (view === "syllabus") renderSyllabus(); if (view === "chapters") renderChapters(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+function showView(view) { document.querySelectorAll(".view").forEach((section) => section.classList.toggle("active", section.id === view)); document.querySelectorAll(".nav-link").forEach((button) => button.classList.toggle("active", button.dataset.view === view)); let h = new Date().getHours(); let greeting = "Good night"; if (h >= 6 && h < 12) greeting = "Good morning"; else if (h >= 12 && h < 16) greeting = "Good afternoon"; else if (h >= 16 && h < 20) greeting = "Good evening"; const titles = { dashboard: `${greeting}, ${state.name}`, practice: "Practice session", revision: "Revision plan", errors: "Error notebook", syllabus: "Syllabus map", chapters: "Chapter Notes" }; el("page-title").textContent = titles[view]; if (view === "dashboard") renderDashboard(); if (view === "practice") renderPractice(); if (view === "revision") renderRevision(); if (view === "errors") renderErrors(); if (view === "syllabus") renderSyllabus(); if (view === "chapters") renderChapters(); window.scrollTo({ top: 0, behavior: "smooth" }); }
 function fillChapterSelects() { ["practice-chapter", "error-chapter"].forEach((selectId) => { el(selectId).innerHTML = chapters.map((chapter) => `<option value="${chapter.id}">Class ${chapter.classYear} — ${chapter.name}</option>`).join(""); }); }
 function getChapter(id) { return chapters.find((chapter) => chapter.id === id); }
 function daySessions(day = today()) { return state.sessions.filter((session) => session.date === day); }
@@ -245,7 +277,7 @@ if (pasted) {
 function renderErrors() { const active = state.errors.filter((error) => !error.resolved); el("error-count").textContent = `${active.length} question${active.length === 1 ? "" : "s"} waiting`; el("error-list").innerHTML = state.errors.length ? state.errors.map((error) => { const chapter = getChapter(error.chapterId); return `<article class="error-item"><div>${error.image ? `<img src="${error.image}" alt="Saved question" />` : ""}</div><div><strong>${escapeText(chapter?.name)}</strong><span class="tag">${escapeText(error.type)}</span><small>${escapeText(error.answer)}</small>${error.note ? `<small>Note: ${escapeText(error.note)}</small>` : ""}</div><div class="error-actions">${!error.resolved ? `<button class="small-button" data-resolve="${error.id}">I know this now</button>` : `<small>Resolved ✓</small>`}<button class="small-button danger" data-delete-error="${error.id}">Delete</button></div></article>`; }).join("") : `<div class="panel"><p class="empty">No saved errors yet. That's a good thing—save only the ones worth revisiting.</p></div>`; document.querySelectorAll("[data-resolve]").forEach((button) => button.addEventListener("click", () => { const record = state.errors.find((error) => error.id === button.dataset.resolve); record.resolved = true; save(); renderErrors(); toast("Marked as understood."); })); document.querySelectorAll("[data-delete-error]").forEach((button) => button.addEventListener("click", () => { state.errors = state.errors.filter((error) => error.id !== button.dataset.deleteError); save(); renderErrors(); })); }
 function showRandomError() { const options = state.errors.filter((error) => !error.resolved); if (!options.length) { toast("Add an error first."); return; } const error = options[Math.floor(Math.random() * options.length)], chapter = getChapter(error.chapterId), box = el("retest-card"); box.innerHTML = `<strong>${escapeText(chapter.name)}</strong><p>${escapeText(error.answer)}</p>${error.note ? `<small>${escapeText(error.note)}</small>` : ""}${error.image ? `<img src="${error.image}" alt="Saved question" />` : ""}`; box.classList.remove("hidden"); }
 
-function renderSyllabus() { el("syllabus-list").innerHTML = [11, 12].map((year) => { const list = chapters.filter((chapter) => chapter.classYear === year); const done = list.filter((chapter) => state.chapters[chapter.id]?.completed).length; return `<section class="syllabus-class"><div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 11px;"><div><h3 style="margin-bottom:0;">Class ${year}</h3><p style="margin: 4px 0 0;">${done} of ${list.length} chapters marked complete</p></div><a href="pdfs/class_${year}_class_${year}_index_and_prelims.pdf" target="_blank" rel="noopener noreferrer" class="secondary-button" style="text-decoration:none;">📄 Class ${year} Index</a></div>${list.map((chapter) => { const data = state.chapters[chapter.id] || {}; const reads = state.readings.filter((reading) => reading.chapterId === chapter.id && !reading.reviewOf).length; const due = reviewQueue().filter((review) => review.chapter.id === chapter.id).length; return `<div class="chapter-row ${data.completed ? "done" : ""}"><input type="checkbox" ${data.completed ? "checked" : ""} data-complete="${chapter.id}" aria-label="Mark ${escapeText(chapter.name)} complete" /><div><b>${escapeText(chapter.name)}${chapter.highWeight ? `<span class="chip">HIGH WEIGHTAGE</span>` : ""}</b><small>NCERT reads: ${reads}/15${due ? ` · ${due} review${due > 1 ? "s" : ""} pending` : ""}</small></div><div class="chapter-actions"><button class="small-button" data-read="${chapter.id}">+ NCERT read</button>${chapter.pdfUrl ? `<a href="${chapter.pdfUrl}" target="_blank" rel="noopener noreferrer" class="small-button" style="text-decoration: none;">Study Now</a>` : ""}</div></div>`; }).join("")}</section>`; }).join(""); document.querySelectorAll("[data-complete]").forEach((box) => box.addEventListener("change", () => { state.chapters[box.dataset.complete] = { ...(state.chapters[box.dataset.complete] || {}), completed: box.checked }; save(); renderAll(); })); document.querySelectorAll("[data-read]").forEach((button) => button.addEventListener("click", () => logReading(button.dataset.read)));  }
+function renderSyllabus() { el("syllabus-list").innerHTML = [11, 12].map((year) => { const list = chapters.filter((chapter) => chapter.classYear === year); const done = list.filter((chapter) => state.chapters[chapter.id]?.completed).length; return `<section class="syllabus-class"><div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 11px;"><div><h3 style="margin-bottom:0;">Class ${year}</h3><p style="margin: 4px 0 0;">${done} of ${list.length} chapters marked complete</p></div><a href="pdfs/class_${year}_class_${year}_index_and_prelims.pdf" target="_blank" rel="noopener noreferrer" class="secondary-button" style="text-decoration:none;">📄 Class ${year} Index</a></div>${list.map((chapter) => { const data = state.chapters[chapter.id] || {}; const reads = state.readings.filter((reading) => reading.chapterId === chapter.id && !reading.reviewOf).length; const due = reviewQueue().filter((review) => review.chapter.id === chapter.id).length; return `<div class="chapter-row ${data.completed ? "done" : ""}"><input type="checkbox" ${data.completed ? "checked" : ""} data-complete="${chapter.id}" aria-label="Mark ${escapeText(chapter.name)} complete" /><div><b>${escapeText(chapter.name)}${chapter.highWeight ? `<span class="chip">HIGH WEIGHTAGE</span>` : ""}</b><small>NCERT reads: ${reads}/15${due ? ` · ${due} review${due > 1 ? "s" : ""} pending` : ""}</small></div><div class="chapter-actions"><button class="small-button" data-read="${chapter.id}">+ NCERT read</button>${chapter.pdfUrl ? `<a href="${chapter.pdfUrl}" data-chapter="${chapter.id}" data-source="NCERT PDF" class="small-button" style="text-decoration: none;">Study Now</a>` : ""}</div></div>`; }).join("")}</section>`; }).join(""); document.querySelectorAll("[data-complete]").forEach((box) => box.addEventListener("change", () => { state.chapters[box.dataset.complete] = { ...(state.chapters[box.dataset.complete] || {}), completed: box.checked }; save(); renderAll(); })); document.querySelectorAll("[data-read]").forEach((button) => button.addEventListener("click", () => logReading(button.dataset.read)));  }
 
 function renderChapters() {
   el("chapters-list").innerHTML = [11, 12].map((year) => {
@@ -253,7 +285,7 @@ function renderChapters() {
     return `<section class="chapters-class"><h3>Class ${year} Biology</h3><div class="chapters-grid">${list.map((chapter, index) => {
       const num = index + 1;
       const hasUrl = Boolean(chapter.notebookUrl);
-      return `<div class="chapter-card"><div class="chapter-card-header"><span class="chapter-number">${num}</span><b>${escapeText(chapter.name)}</b>${chapter.highWeight ? `<span class="chip">HIGH WEIGHTAGE</span>` : ""}</div>${hasUrl ? `<a class="notebook-button" href="${chapter.notebookUrl}" target="_blank" rel="noreferrer">📓 Open in NotebookLM</a>` : `<span class="notebook-button disabled">📓 Link coming soon</span>`}</div>`;
+      return `<div class="chapter-card"><div class="chapter-card-header"><span class="chapter-number">${num}</span><b>${escapeText(chapter.name)}</b>${chapter.highWeight ? `<span class="chip">HIGH WEIGHTAGE</span>` : ""}</div>${hasUrl ? `<a class="notebook-button" href="${chapter.notebookUrl}" data-chapter="${chapter.id}" data-source="NotebookLM">📓 Open in NotebookLM</a>` : `<span class="notebook-button disabled">📓 Link coming soon</span>`}</div>`;
     }).join("")}</div></section>`;
   }).join("");
    

@@ -1,28 +1,30 @@
 # Bloom — NEET Biology Companion
 
-A local-first personal study companion for NEET Biology. It deliberately does **not** include an AI-generated or copied question bank. Use trusted external sources such as ScienceLesson, official PYQs, and a personally owned MTG book, then use Bloom to track the work that matters.
+A local-first personal study companion for NEET Biology designed for the "Lazy Student". It minimizes friction with zero-typing logging, background ghost timers, and automated study streaks. Use trusted external sources (NTA, NCERT PDFs) and let Bloom track your progress silently.
 
-## Included
+## Lazy Student Features 🦥
 
-- private browser-local name screen
-- daily 50-question streak and practice-session logging
-- persistent question / study timer
-- external practice-source links
-- NCERT read count with Day 7 and Day 30 revision scheduling
-- error notebook with optional private question image
-- error re-test card
-- editable NEET target-date countdown
-- Class 11 and 12 syllabus coverage tracker
+- **Ghost Timer:** Clicking any PDF or NotebookLM link auto-starts the timer in the background. Close the PDF tab and it auto-stops and logs the session to your history.
+- **Spoon-Feed Blocker:** Forces you to review 1 randomly selected error from your Error Notebook before it unlocks the dashboard for the day.
+- **Math-Free Practice:** Just enter total attempted and total mistakes; the app handles the rest.
+- **Gen-Z Toxicity Engine:** Random roast and meme quotes adjust dynamically to your daily streaks and accuracy percentage (e.g., "Tukka strategy failed successfully 📉").
+- **Zero-Typing Error Notebook:** Ctrl+V global paste support. Simply screenshot a wrong question, paste it anywhere in the app, and click save.
+
+## Core Features
+
+- Time-based personalized daily greetings
+- Editable NEET target-date countdown
+- Class 11 & 12 syllabus tracking with integrated PDF fetching
+- Spaced revision queue (Day 7 / Day 30) for NCERT reads
 
 ## Run it
 
 This is a dependency-free static site. Open `index.html` in a modern browser, or serve the folder locally:
 
 ```bash
-cd neet-biology-platform
 python3 -m http.server 8080
 ```
 
 Then open `http://localhost:8080`.
 
-All current data is stored in this browser's local storage. A future hosted version can replace local storage with authenticated database storage without changing the study workflow.
+All data is stored purely via `localStorage` with iOS Safari fail-safes built-in.
