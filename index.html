@@ -26,6 +26,19 @@
       <div class="auth-art" aria-hidden="true"><div class="orb orb-one"></div><div class="orb orb-two"></div><span>🌿</span></div>
     </main>
 
+    
+    <div id="spoon-feed-modal" class="auth-shell hidden" style="position:fixed;top:0;left:0;width:100%;height:100vh;z-index:100;background:rgba(23, 50, 58, 0.95);grid-template-columns:1fr;place-items:center;">
+      <section class="auth-card" style="min-height:auto;padding:40px;border-radius:20px;text-align:center;box-shadow:var(--shadow);">
+        <span class="eyebrow" style="color:var(--leaf);">SPOON FEEDING 🥄</span>
+        <h2 style="margin:10px 0;">Clear one mistake to unlock.</h2>
+        <p style="margin-bottom:20px;color:var(--muted);">You cannot skip your past mistakes. Answer this in your head, then click check.</p>
+        <div id="spoon-content" class="retest-card" style="margin-bottom:20px;text-align:left;"></div>
+        <div style="display:flex;gap:10px;">
+          <button id="spoon-check" class="primary-button" style="flex:1;">View Answer & Resolve</button>
+        </div>
+      </section>
+    </div>
+
     <div id="app-view" class="app-shell hidden">
       <aside class="sidebar">
         <a class="brand" href="#dashboard" data-view="dashboard"><span>✦</span> bloom</a>
@@ -73,8 +86,10 @@
             <form id="practice-form" class="panel practice-form">
               <label>Source<select id="practice-source"><option>ScienceLesson</option><option>MTG Fingerprints</option><option>Official PYQ</option><option>Other</option></select></label>
               <label>Chapter<select id="practice-chapter"></select></label>
-              <div class="two-fields"><label>Questions solved<input id="practice-total" type="number" min="0" value="50" required /></label><label>Correct<input id="practice-correct" type="number" min="0" value="0" required /></label></div>
-              <div class="two-fields"><label>Wrong<input id="practice-wrong" type="number" min="0" value="0" required /></label><label>Guessed<input id="practice-guessed" type="number" min="0" value="0" required /></label></div>
+              <div class="two-fields">
+                <label>Total Attempted<input id="practice-total" type="number" min="1" value="50" required /></label>
+                <label>Mistakes (Wrong/Guessed)<input id="practice-mistakes" type="number" min="0" value="0" required /></label>
+              </div>
               <div class="form-actions"><button type="button" id="open-source" class="secondary-button">Open source ↗</button><button type="submit" class="primary-button">Save session</button></div>
               <small>Guessed questions can be added to the Error Notebook after saving.</small>
             </form>
@@ -89,7 +104,7 @@
 
         <section id="errors" class="view">
           <div class="section-intro"><span class="eyebrow">ERROR NOTEBOOK</span><h2>Mistakes become marks later.</h2><p>Save only questions worth seeing again: wrong answers, guesses, or confusing NCERT facts.</p></div>
-          <div class="error-grid"><form id="error-form" class="panel error-form"><label>Chapter<select id="error-chapter"></select></label><label>Why did it go wrong?<select id="error-type"><option>NCERT fact</option><option>Concept gap</option><option>Confused options</option><option>Silly mistake</option><option>Time pressure</option></select></label><label>Correct answer / key fact<textarea id="error-answer" required maxlength="600" placeholder="Write the correct option and the reason."></textarea></label><label>Question image <input id="error-image" type="file" accept="image/*" /></label><label>Personal note <textarea id="error-note" maxlength="600" placeholder="What will help you avoid this next time?"></textarea></label><button class="primary-button" type="submit">Save to notebook</button><small>Keep book-question images private; do not publish or share them.</small></form><article class="panel error-retest"><span class="eyebrow">RE-TEST MODE</span><h3 id="error-count">0 questions waiting</h3><p>Revisit saved errors until they feel easy.</p><button id="retest-random" class="secondary-button">Show a random error</button><div id="retest-card" class="retest-card hidden"></div></article></div><div id="error-list" class="error-list"></div>
+          <div class="error-grid"><form id="error-form" class="panel error-form"><label>Chapter<select id="error-chapter"></select></label><label>Why did it go wrong?<select id="error-type"><option>NCERT fact</option><option>Concept gap</option><option>Confused options</option><option>Silly mistake</option><option>Time pressure</option></select></label><label>Correct answer / key fact<textarea id="error-answer" maxlength="600" placeholder="Optional: Correct answer or short reason (or just paste a screenshot!)"></textarea></label><label>Question image <input id="error-image" type="file" accept="image/*" /></label><label>Personal note <textarea id="error-note" maxlength="600" placeholder="What will help you avoid this next time?"></textarea></label><button class="primary-button" type="submit">Save to notebook</button><small>Keep book-question images private; do not publish or share them.</small></form><article class="panel error-retest"><span class="eyebrow">RE-TEST MODE</span><h3 id="error-count">0 questions waiting</h3><p>Revisit saved errors until they feel easy.</p><button id="retest-random" class="secondary-button">Show a random error</button><div id="retest-card" class="retest-card hidden"></div></article></div><div id="error-list" class="error-list"></div>
         </section>
 
         <section id="syllabus" class="view">
