@@ -138,8 +138,29 @@ function fillChapterSelects() { ["practice-chapter", "error-chapter"].forEach((s
 function getChapter(id) { return chapters.find((chapter) => chapter.id === id); }
 function daySessions(day = today()) { return state.sessions.filter((session) => session.date === day); }
 function questionsToday() { return daySessions().reduce((total, session) => total + Number(session.total || 0), 0); }
-function minutesToday() { return Math.round(daySessions().reduce((total, session) => total + Number(session.duration || 0), 0) / 60); }
-function streak() { let count = 0; let cursor = dateOnly(today()); while (true) { const day = cursor.toISOString().slice(0, 10); const sess = state.sessions.filter((session) => session.date === day); const q = sess.reduce((sum, session) => sum + Number(session.total || 0), 0); const mins = sess.reduce((sum, session) => sum + Number(session.duration || 0), 0) / 60; if (q === 0 && mins < 10) break; count++; cursor.setDate(cursor.getDate() - 1); } return count; }
+function minutesToday() { 
+  let finished = daySessions().reduce((total, session) => total + Number(session.duration || 0), 0);
+  let active = (state.timer && state.timer.date === today()) ? timerSeconds() : 0;
+  return Math.round((finished + active) / 60); 
+}
+function streak() { 
+  let count = 0; 
+  let cursor = dateOnly(today()); 
+  while (true) { 
+    const day = cursor.toISOString().slice(0, 10); 
+    const sess = state.sessions.filter((session) => session.date === day); 
+    const q = sess.reduce((sum, session) => sum + Number(session.total || 0), 0); 
+    let mins = sess.reduce((sum, session) => sum + Number(session.duration || 0), 0) / 60;
+    
+    // Include active ghost timer if it applies to the day being checked
+    if (day === today() && state.timer && state.timer.date === today()) {
+      mins += timerSeconds() / 60;
+    }
+    
+    if (q === 0 && mins < 10) break; 
+    count++; cursor.setDate(cursor.getDate() - 1); 
+  } return count; 
+}
 function completedChapters() { return chapters.filter((chapter) => state.chapters[chapter.id]?.completed); }
 function percentage() { return Math.round((completedChapters().length / chapters.length) * 100); }
 function renderAll() { fillChapterSelects(); renderDashboard(); renderPractice(); renderRevision(); renderErrors(); renderSyllabus(); renderChapters(); restoreTimer(); }
@@ -154,7 +175,7 @@ else if (s >= 3) quote = streakQuotes[1];
 else quote = streakQuotes[0];
 el("daily-quote").textContent = `"${quote}"`;
   el("target-date").value = state.targetDate; const days = Math.max(0, Math.ceil((dateOnly(state.targetDate) - dateOnly(today())) / 86400000)); el("days-left").textContent = days;
-  const done = questionsToday(), currentStreak = streak(), percent = percentage(); el("today-questions").textContent = `${done} / 50`; el("today-minutes").textContent = `${minutesToday()} min`; el("streak-count").textContent = `${currentStreak} day streak`; const mins = minutesToday(); el("streak-copy").textContent = (done >= 1 || mins >= 10) ? "Today's streak secured ✦" : `10 mins study or 1 Q to protect it`; el("coverage-number").textContent = `${percent}%`; el("goal-percent").textContent = `${Math.min(100, (done >= 1 || mins >= 10) ? 100 : Math.round((mins/10)*100))}%`; el("goal-message").textContent = (done >= 1 || mins >= 10) ? "You did it. Review one mistake before you rest." : `Read for 10 mins or solve questions.`;
+  const done = questionsToday(), currentStreak = streak(), percent = percentage(); el("today-questions").textContent = `${done} / 50`; el("today-minutes").textContent = `${minutesToday()} min`; el("streak-count").textContent = `${currentStreak} day streak`; const mins = minutesToday(); el("streak-count").textContent = `${streak()} day streak`; el("streak-copy").textContent = (done >= 1 || mins >= 10) ? "Today's streak secured ✦" : `10 mins study or 1 Q to protect it`; el("coverage-number").textContent = `${percent}%`; el("goal-percent").textContent = `${Math.min(100, (done >= 1 || mins >= 10) ? 100 : Math.round((mins/10)*100))}%`; el("goal-message").textContent = (done >= 1 || mins >= 10) ? "You did it. Review one mistake before you rest." : `Read for 10 mins or solve questions.`;
   el("coverage-bar").style.width = `${percent}%`; el("coverage-label").textContent = `${completedChapters().length} of ${chapters.length} chapters complete`; el("coverage-detail").textContent = `${percent}% complete`; el("class-progress").innerHTML = [11, 12].map((year) => { const all = chapters.filter((c) => c.classYear === year); const complete = all.filter((c) => state.chapters[c.id]?.completed).length; return `<div><b>Class ${year}</b><span>${complete}/${all.length} chapters</span></div>`; }).join("");
   const due = reviewQueue().slice(0, 4); el("due-list").innerHTML = due.length ? due.map((item) => `<div class="due-item"><div><strong>${escapeText(item.chapter.name)}</strong><small>${item.label} · due ${prettyDate(item.due)}</small></div><button class="small-button" data-review="${item.key}">Mark revised</button></div>`).join("") : `<p class="empty">Nothing is due yet. Log an NCERT reading to begin your schedule.</p>`; document.querySelectorAll("[data-review]").forEach((button) => button.addEventListener("click", () => completeReview(button.dataset.review)));
 }
@@ -165,8 +186,38 @@ function logPractice(event) { event.preventDefault(); const total = Math.max(0, 
 
 function formatTime(seconds) { const h = String(Math.floor(seconds / 3600)).padStart(2, "0"); const m = String(Math.floor(seconds % 3600 / 60)).padStart(2, "0"); const s = String(seconds % 60).padStart(2, "0"); return `${h}:${m}:${s}`; }
 function timerSeconds() { if (!state.timer) return 0; return state.timer.elapsed + (state.timer.running ? Math.floor((Date.now() - state.timer.startedAt) / 1000) : 0); }
-function renderTimer() { const seconds = timerSeconds(); el("timer-display").textContent = formatTime(seconds); const active = Boolean(state.timer); el("timer-start").disabled = Boolean(state.timer?.running); el("timer-pause").disabled = !active || !state.timer.running; el("timer-finish").disabled = !active; if (active) el("timer-status").textContent = state.timer.running ? `${state.timer.mode} timer is running.` : `${state.timer.mode} timer is paused.`; }
-function startTimer() { if (!state.timer) state.timer = { elapsed: 0, startedAt: Date.now(), running: true, mode: currentMode }; else { state.timer.startedAt = Date.now(); state.timer.running = true; } save(); stopInterval(); timerInterval = setInterval(renderTimer, 500); renderTimer(); }
+function renderTimer() { 
+  const seconds = timerSeconds(); 
+  el("timer-display").textContent = formatTime(seconds); 
+  const active = Boolean(state.timer); 
+  el("timer-start").disabled = Boolean(state.timer?.running); 
+  el("timer-pause").disabled = !active || !state.timer.running; 
+  el("timer-finish").disabled = !active; 
+  if (active) el("timer-status").textContent = state.timer.running ? `${state.timer.mode} timer is running.` : `${state.timer.mode} timer is paused.`;
+  
+  // Live update Dashboard stats so lazy students see progress immediately
+  const done = questionsToday();
+  const mins = minutesToday();
+  if (el("today-minutes")) {
+    el("today-minutes").textContent = `${mins} min`;
+    el("goal-percent").textContent = `${Math.min(100, (done >= 1 || mins >= 10) ? 100 : Math.round((mins/10)*100))}%`;
+    el("streak-count").textContent = `${streak()} day streak`; el("streak-copy").textContent = (done >= 1 || mins >= 10) ? "Today's streak secured ✦" : `10 mins study or 1 Q to protect it`;
+    el("goal-message").textContent = (done >= 1 || mins >= 10) ? "You did it. Review one mistake before you rest." : `Read for 10 mins or solve questions.`;
+  }
+}
+function startTimer() { 
+  if (!state.timer) { 
+    state.timer = { elapsed: 0, startedAt: Date.now(), running: true, mode: currentMode, date: today() }; 
+  } else { 
+    if (state.timer.running) return; // Prevent resetting if already running
+    state.timer.startedAt = Date.now(); 
+    state.timer.running = true; 
+  } 
+  save(); 
+  stopInterval(); 
+  timerInterval = setInterval(renderTimer, 500); 
+  renderTimer(); 
+}
 function pauseTimer() { if (!state.timer?.running) return; state.timer.elapsed = timerSeconds(); state.timer.running = false; save(); stopInterval(); renderTimer(); }
 function finishTimer() { if (!state.timer) return; state.timer.elapsed = timerSeconds(); state.timer.running = false; save(); stopInterval(); renderTimer(); if (state.timer.mode === "Study") { state.sessions.push({ id: crypto.randomUUID(), date: today(), source: "Study focus", chapterId: el("practice-chapter").value, total: 0, correct: 0, wrong: 0, guessed: 0, duration: state.timer.elapsed, createdAt: Date.now() }); state.timer = null; save(); renderAll(); toast("Study session saved."); } else { toast("Timer saved. Enter your results and press Save session."); } }
 function restoreTimer() { stopInterval(); renderTimer(); if (state.timer?.running) timerInterval = setInterval(renderTimer, 500); }
