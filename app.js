@@ -173,6 +173,118 @@ function init() {
     }
   });
 
+  
+  // Reminder System Initialization
+  if (el("reminder-btn")) {
+    el("reminder-btn").addEventListener("click", () => {
+      el("reminder-modal").classList.remove("hidden");
+      // Pre-fill status
+      if (state.reminderIntervalMins) {
+        el("reminder-interval").value = state.reminderIntervalMins;
+        const next = state.reminderTimestamp ? new Date(state.reminderTimestamp).toLocaleTimeString() : "—";
+        el("reminder-status").textContent = `Next nudge: ${next}`;
+      }
+    });
+  }
+  
+  if (el("reminder-cancel")) {
+    el("reminder-cancel").addEventListener("click", () => {
+      el("reminder-modal").classList.add("hidden");
+    });
+  }
+  
+  if (el("reminder-save")) {
+    el("reminder-save").addEventListener("click", () => {
+      const mins = parseInt(el("reminder-interval").value);
+      if (!mins) return toast("Pick a time!");
+      activateReminders(mins);
+    });
+  }
+  
+  // Resume timer on load if active
+  if (state.reminderIntervalMins && state.reminderTimestamp) {
+    const now = Date.now();
+    const remaining = state.reminderTimestamp - now;
+    if (remaining > 0) {
+      setTimeout(() => {
+        sendMemeNotification();
+        scheduleNextReminder();
+      }, remaining);
+      scheduleNextReminder();
+    }
+  }
+
+  function activateReminders(mins) {
+    if (window.OneSignalDeferred) {
+      OneSignalDeferred.push(async function(OneSignal) {
+        // Explictly request permission on click (Fixes Trap 1 block)
+        await OneSignal.Notifications.requestPermission();
+        
+        if (OneSignal.Notifications.permission === "granted") {
+          // Send tags to OneSignal for background pushes
+          await OneSignal.User.addTags({
+            reminder_active: "true",
+            reminder_interval: mins.toString(),
+            user_name: state.name || "student"
+          });
+          
+          commitReminders(mins);
+        } else {
+          toast("Bro, you blocked notifications! Enable them in your browser settings. 🤡");
+        }
+      });
+    } else {
+      // Native fallback
+      if (Notification.permission !== "granted") {
+        Notification.requestPermission().then(perm => {
+          if (perm === "granted") commitReminders(mins);
+          else toast("Notifications blocked! Enable them in browser settings. 🤡");
+        });
+      } else {
+        commitReminders(mins);
+      }
+    }
+  }
+  
+  function commitReminders(mins) {
+    state.reminderIntervalMins = mins;
+    state.reminderTimestamp = Date.now() + mins * 60 * 1000;
+    save();
+    scheduleNextReminder();
+    el("reminder-modal").classList.add("hidden");
+    toast(`Reminders armed! Next roast in ${mins} mins. 🎯`);
+    if (el("reminder-status")) el("reminder-status").textContent = `Next nudge: ${new Date(state.reminderTimestamp).toLocaleTimeString()}`;
+  }
+
+  function scheduleNextReminder() {
+    if (reminderTimer) clearTimeout(reminderTimer);
+    const mins = state.reminderIntervalMins;
+    if (!mins) return;
+    state.reminderTimestamp = Date.now() + mins * 60 * 1000;
+    save();
+    reminderTimer = setTimeout(() => {
+      sendMemeNotification();
+      scheduleNextReminder();
+    }, mins * 60 * 1000);
+  }
+  
+  function sendMemeNotification() {
+    // Only fire foreground local notification if tab is open
+    if (document.visibilityState === 'visible') {
+      const meme = memeNotifications[Math.floor(Math.random() * memeNotifications.length)];
+      if (Notification.permission === "granted" || (window.OneSignalDeferred && OneSignal.Notifications && OneSignal.Notifications.permission === "granted")) {
+        const n = new Notification(meme.title, {
+          body: meme.body,
+          icon: "https://cdn-icons-png.flaticon.com/512/2997/2997985.png",
+          vibrate: [200, 100, 200]
+        });
+        n.onclick = () => { window.focus(); n.close(); };
+      }
+    }
+    if (el("reminder-status")) el("reminder-status").textContent = `Next nudge: ${new Date(state.reminderTimestamp).toLocaleTimeString()}`;
+  }
+
+
   // Allow clicking avatar to change name
   if(el("avatar")) {
     el("avatar").addEventListener("click", () => {
