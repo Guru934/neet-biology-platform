@@ -9,6 +9,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function() {
+      OneSignal.init({
+        appId: "9b0287de-36d8-4b0e-aa35-2a7a8891bfac",
+        notifyButton: {
+          enable: false
+        },
+        allowLocalhostAsSecureOrigin: true
+      });
+    });
+  </script>
   </head>
   <body>
     <main id="auth-view" class="auth-shell">
