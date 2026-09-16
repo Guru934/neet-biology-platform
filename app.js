@@ -57,6 +57,8 @@ function escapeText(value) { const node = document.createElement("span"); node.t
 function toast(message) { const box = el("toast"); box.textContent = message; box.className = "toast show"; setTimeout(() => { box.className = "toast hidden"; }, 2800); }
 
 function init() {
+  if (!state.hasPromptedNameV2) { state.name = ""; state.hasPromptedNameV2 = true; save(); }
+
   if (state.name) showApp();
   el("login-form").addEventListener("submit", (event) => { event.preventDefault(); state.name = el("student-name").value.trim(); save(); showApp(); });
   document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
@@ -161,7 +163,17 @@ function init() {
       }
     }
   });
+
+  // Allow clicking avatar to change name
+  if(el("avatar")) {
+    el("avatar").addEventListener("click", () => {
+      el("app-view").classList.add("hidden");
+      el("auth-view").classList.remove("hidden");
+      toast("Enter a new name to switch users.");
+    });
+  }
 }
+
 
 
 function showApp() { el("auth-view").classList.add("hidden"); el("app-view").classList.remove("hidden"); el("avatar").textContent = state.name[0].toUpperCase(); renderAll(); }
