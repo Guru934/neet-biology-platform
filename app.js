@@ -215,34 +215,41 @@ function init() {
   }
 
   function activateReminders(mins) {
-    if (window.OneSignalDeferred) {
-      OneSignalDeferred.push(async function(OneSignal) {
-        // Explictly request permission on click (Fixes Trap 1 block)
-        await OneSignal.Notifications.requestPermission();
-        
-        if (OneSignal.Notifications.permission === "granted") {
-          // Send tags to OneSignal for background pushes
+    // 1. Check if browser even supports Notifications (Fixes silent crashes on old iOS)
+    if (!('Notification' in window)) {
+      toast("Notifications not supported! (iPhone users: You must 'Add to Home Screen' first)");
+      return;
+    }
+
+    // 2. Wrap the OneSignal attachment logic
+    const setupOneSignalAndCommit = () => {
+      if (window.OneSignalDeferred) {
+        OneSignalDeferred.push(async function(OneSignal) {
           await OneSignal.User.addTags({
             reminder_active: "true",
             reminder_interval: mins.toString(),
             user_name: state.name || "student"
           });
-          
-          commitReminders(mins);
-        } else {
-          toast("Bro, you blocked notifications! Enable them in your browser settings. 🤡");
-        }
-      });
-    } else {
-      // Native fallback
-      if (Notification.permission !== "granted") {
-        Notification.requestPermission().then(perm => {
-          if (perm === "granted") commitReminders(mins);
-          else toast("Notifications blocked! Enable them in browser settings. 🤡");
         });
-      } else {
-        commitReminders(mins);
       }
+      commitReminders(mins);
+    };
+
+    // 3. Immediately request native browser permission inside the direct click handler
+    // This bypasses ALL async traps from external SDKs.
+    if (Notification.permission === "default") {
+      Notification.requestPermission().then(perm => {
+        if (perm === "granted") setupOneSignalAndCommit();
+        else toast("Bro, you blocked notifications! Enable them in your browser settings. 🤡");
+      }).catch((err) => {
+        toast("Error requesting permissions. Are you in incognito?");
+        console.error(err);
+      });
+    } else if (Notification.permission === "granted") {
+      setupOneSignalAndCommit();
+    } else {
+      // If it's "denied"
+      toast("Bro, you blocked notifications! Check your browser lock icon settings. 🤡");
     }
   }
   
