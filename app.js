@@ -169,6 +169,7 @@ function init() {
     el("avatar").addEventListener("click", () => {
       el("app-view").classList.add("hidden");
       el("auth-view").classList.remove("hidden");
+      if(el("spoon-feed-modal")) el("spoon-feed-modal").classList.add("hidden");
       toast("Enter a new name to switch users.");
     });
   }
