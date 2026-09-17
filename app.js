@@ -104,12 +104,11 @@ function init() {
     save();
   }
 
-  // Auto-Save Timer on App Close
+  // Auto-Save Timer state on App Close
   ["pagehide", "beforeunload"].forEach(evt => window.addEventListener(evt, () => {
     if (state.timer?.running) {
-      // Pause it immediately so time is logged before the browser kills the process
-      state.timer.elapsed = timerSeconds();
-      state.timer.running = false;
+      // Keep it running to allow background tracking (e.g. native NotebookLM App)
+      // Just persist the state so we don't lose the startedAt timestamp
       localStorage.setItem(STORAGE, JSON.stringify(state));
     }
   }));
@@ -150,24 +149,12 @@ function init() {
       
       // Start Timer
       startTimer();
-      toast(`Started ${src}. Time auto-saves when you close the tab!`);
-      
-      // Open window & poll status
+      toast(`Started ${src}. Timer is running!`);
+
+      // Open window (or launch native app on mobile)
       const childWin = window.open(btn.href, "_blank");
-      if (childWin) {
-        const checkClosed = setInterval(() => {
-          if (childWin.closed) {
-            clearInterval(checkClosed);
-            // Finish automatically if still running
-            if (state.timer && state.timer.running && state.timer.mode === "Study") {
-              finishTimer();  // This auto-saves it to the database
-              toast("Welcome back! Study session auto-logged.");
-            }
-          }
-        }, 1000);
-      } else {
-        // Popups blocked fallback
-        toast("Timer started! Turn off pop-up blockers for auto-save.");
+      if (!childWin) {
+        // Popups blocked fallback - open in same tab
         window.location.href = btn.href;
       }
     }
@@ -200,7 +187,18 @@ function init() {
       activateReminders(mins);
     });
   }
-  
+
+  if (el("reminder-test")) {
+    el("reminder-test").addEventListener("click", () => {
+      // Prompt for permission if not granted yet
+      if ('Notification' in window && Notification.permission === "default") {
+        Notification.requestPermission().then(() => sendMemeNotification());
+      } else {
+        sendMemeNotification();
+      }
+    });
+  }
+
   // Resume timer on load if active
   if (state.reminderIntervalMins && state.reminderTimestamp) {
     const now = Date.now();
@@ -305,7 +303,7 @@ function init() {
 
 
 
-function showApp() { el("auth-view").classList.add("hidden"); el("app-view").classList.remove("hidden"); el("avatar").textContent = state.name[0].toUpperCase(); renderAll(); }
+function showApp() { el("auth-view").classList.add("hidden"); el("app-view").classList.remove("hidden"); el("avatar").textContent = state.name[0].toUpperCase(); renderAll(); showView("dashboard"); }
 function showView(view) { document.querySelectorAll(".view").forEach((section) => section.classList.toggle("active", section.id === view)); document.querySelectorAll(".nav-link").forEach((button) => button.classList.toggle("active", button.dataset.view === view)); let h = new Date().getHours(); let greeting = "Good night"; if (h >= 6 && h < 12) greeting = "Good morning"; else if (h >= 12 && h < 16) greeting = "Good afternoon"; else if (h >= 16 && h < 20) greeting = "Good evening"; const titles = { dashboard: `${greeting}, ${state.name}`, practice: "Practice session", revision: "Revision plan", errors: "Error notebook", syllabus: "Syllabus map", chapters: "Chapter Notes" }; el("page-title").textContent = titles[view]; if (view === "dashboard") renderDashboard(); if (view === "practice") renderPractice(); if (view === "revision") renderRevision(); if (view === "errors") renderErrors(); if (view === "syllabus") renderSyllabus(); if (view === "chapters") renderChapters(); window.scrollTo({ top: 0, behavior: "smooth" }); }
 function fillChapterSelects() { ["practice-chapter", "error-chapter"].forEach((selectId) => { el(selectId).innerHTML = chapters.map((chapter) => `<option value="${chapter.id}">Class ${chapter.classYear} — ${chapter.name}</option>`).join(""); }); }
 function getChapter(id) { return chapters.find((chapter) => chapter.id === id); }
