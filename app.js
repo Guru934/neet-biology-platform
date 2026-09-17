@@ -188,16 +188,6 @@ function init() {
     });
   }
 
-  if (el("reminder-test")) {
-    el("reminder-test").addEventListener("click", () => {
-      // Prompt for permission if not granted yet
-      if ('Notification' in window && Notification.permission === "default") {
-        Notification.requestPermission().then(() => sendMemeNotification());
-      } else {
-        sendMemeNotification();
-      }
-    });
-  }
 
   // Resume timer on load if active
   if (state.reminderIntervalMins && state.reminderTimestamp) {

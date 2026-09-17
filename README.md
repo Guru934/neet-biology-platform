@@ -4,7 +4,8 @@ A local-first personal study companion for NEET Biology designed for the "Lazy S
 
 ## Lazy Student Features 🦥
 
-- **Ghost Timer:** Clicking any PDF or NotebookLM link auto-starts the timer in the background. Close the PDF tab and it auto-stops and logs the session to your history.
+- **Ghost Timer & Universal Handoff:** Clicking any PDF or NotebookLM link auto-starts the timer in the background. It persists gracefully even if you tab out or switch to the native NotebookLM mobile app, accurately tracking deep study time.
+- **Streak Guard (Push Notifications):** Employs aggressive, recurring mobile-native push notifications via Service Workers to roast you into studying every 3–4 hours if you abandon your streak.
 - **Spoon-Feed Blocker:** Forces you to review 1 randomly selected error from your Error Notebook before it unlocks the dashboard for the day.
 - **Math-Free Practice:** Just enter total attempted and total mistakes; the app handles the rest.
 - **Gen-Z Toxicity Engine:** Random roast and meme quotes adjust dynamically to your daily streaks and accuracy percentage (e.g., "Tukka strategy failed successfully 📉").
