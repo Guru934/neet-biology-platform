@@ -274,19 +274,30 @@ function init() {
   }
   
   function sendMemeNotification() {
-    // Only fire foreground local notification if tab is open
-    if (document.visibilityState === 'visible') {
-      const meme = memeNotifications[Math.floor(Math.random() * memeNotifications.length)];
-      if (Notification.permission === "granted" || (window.OneSignalDeferred && OneSignal.Notifications && OneSignal.Notifications.permission === "granted")) {
-        const n = new Notification(meme.title, {
-          body: meme.body,
-          icon: "https://cdn-icons-png.flaticon.com/512/2997/2997985.png",
-          vibrate: [200, 100, 200]
+    const meme = memeNotifications[Math.floor(Math.random() * memeNotifications.length)];
+    const notifyOpts = {
+      body: meme.body,
+      icon: "https://cdn-icons-png.flaticon.com/512/2997/2997985.png",
+      vibrate: [200, 100, 200]
+    };
+
+    if (Notification.permission === "granted" || (window.OneSignalDeferred && OneSignal.Notifications && OneSignal.Notifications.permission === "granted")) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(sw => {
+          sw.showNotification(meme.title, notifyOpts);
+        }).catch(() => {
+          try { new Notification(meme.title, notifyOpts); } catch (e) { console.error(e); }
         });
-        n.onclick = () => { window.focus(); n.close(); };
+      } else {
+        try { new Notification(meme.title, notifyOpts); } catch (e) { console.error(e); }
       }
+    } else {
+      toast("Allow notifications in your browser settings to see nudges!");
     }
-    if (el("reminder-status")) el("reminder-status").textContent = `Next nudge: ${new Date(state.reminderTimestamp).toLocaleTimeString()}`;
+
+    if (el("reminder-status") && state.reminderTimestamp) {
+      el("reminder-status").textContent = `Next nudge: ${new Date(state.reminderTimestamp).toLocaleTimeString()}`;
+    }
   }
 
 
